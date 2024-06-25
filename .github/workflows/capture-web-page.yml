@@ -1,0 +1,36 @@
+name: Capture Web Page
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 10 * * *' # 每天执行一次
+
+jobs:
+  capture-and-save:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14'
+
+    - name: Capture webpage
+      run: |
+        npm install puppeteer
+        node capture.js
+
+    - name: Commit files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git commit -m "Update webpage snapshot" -a || echo "No changes to commit"
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        force: true
